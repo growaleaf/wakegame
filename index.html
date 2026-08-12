@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>WAKE — steer the harbor's kindness</title>
+<meta name="description" content="You are not the ferry. You are its wake. Steer the trailing V of water to do small good things around a dawn harbor — never the swan nest." />
+<meta property="og:title" content="WAKE" />
+<meta property="og:description" content="You are not the ferry. You are its wake — steer the trailing V of a fixed morning route to nudge a toy home, wake a grumpy angler, and push litter clear, without ever swamping the swan nest." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#3a2f52" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='84'%3E%F0%9F%9A%A3%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    color-scheme: dark;
+    --rose: #f2b79f;
+    --ink: #161226;
+    --ink2: #241b34;
+    --parchment: #f5ecdd;
+    --warm: #ffcf8a;
+    --muted: #b8a9c4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  body {
+    display: flex; justify-content: center;
+    min-height: 100dvh;
+  }
+  #app {
+    width: 100%; max-width: 480px;
+    min-height: 100dvh;
+    display: flex; flex-direction: column;
+    position: relative;
+    background: linear-gradient(180deg, #241b34 0%, #161226 60%, #100c1c 100%);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow: hidden;
+  }
+  .screen {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    padding: 28px 24px;
+    min-height: 0;
+  }
+  .screen.active { display: flex; }
+
+  h1 {
+    font-size: 2.6rem;
+    letter-spacing: 0.06em;
+    margin: 0 0 6px;
+    color: var(--rose);
+    font-weight: normal;
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 0.98rem;
+    line-height: 1.5;
+    margin: 0 0 28px;
+    max-width: 34ch;
+  }
+  h2 {
+    font-weight: normal;
+    font-size: 1.4rem;
+    color: var(--rose);
+    margin: 0 0 14px;
+  }
+  p { line-height: 1.55; color: var(--parchment); }
+
+  #screen-title { justify-content: center; align-items: flex-start; }
+  #screen-title .boat-mark { font-size: 0; } /* decorative glyph rendered on canvas below, not relied on for meaning */
+
+  button {
+    font-family: Georgia, serif;
+    font-size: 1.02rem;
+    color: var(--ink);
+    background: var(--rose);
+    border: none;
+    border-radius: 999px;
+    padding: 13px 22px;
+    margin: 6px 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+  button.secondary {
+    background: transparent;
+    color: var(--parchment);
+    border: 1px solid rgba(245,236,221,0.35);
+  }
+  button.ghost {
+    background: none;
+    color: var(--muted);
+    border: none;
+    width: auto;
+    padding: 6px 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  .stack { display: flex; flex-direction: column; gap: 2px; }
+
+  #screen-howto ol { padding-left: 20px; line-height: 1.7; }
+  #screen-howto li { margin-bottom: 10px; }
+
+  #select-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; padding-bottom: 8px; }
+  .morning-btn { display: flex; justify-content: space-between; }
+  .morning-btn.cleared { background: var(--warm); }
+  .morning-btn.locked { background: rgba(245,236,221,0.15); color: var(--muted); }
+  .morning-btn.endless { background: var(--ink2); color: var(--parchment); border: 1px solid rgba(245,236,221,0.3); }
+
+  #screen-play { padding: 0; }
+  #harbor-wrap { position: relative; flex: 1; min-height: 0; }
+  #harbor {
+    width: 100%; height: 100%;
+    display: block;
+    touch-action: none;
+    background: #100c1c;
+  }
+  #play-hint {
+    position: absolute; left: 0; right: 0; bottom: 14px;
+    text-align: center; color: rgba(245,236,221,0.55);
+    font-size: 0.82rem; pointer-events: none;
+    padding: 0 20px;
+  }
+
+  #screen-result { justify-content: center; }
+  #result-title { font-size: 1.6rem; color: var(--rose); margin-bottom: 8px; }
+  #result-detail { color: var(--muted); margin-bottom: 18px; }
+  #result-share-box {
+    background: var(--ink2); border-radius: 12px; padding: 14px 16px;
+    font-size: 0.9rem; color: var(--parchment); margin-bottom: 20px;
+    word-break: break-word;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="screen-title" class="screen active">
+    <h1>WAKE</h1>
+    <p class="tagline">The ferry keeps its own morning. You don't steer it — you steer what it leaves behind: the trailing water. Use it gently. The harbor is full of small things that need exactly that.</p>
+    <div class="stack">
+      <button id="btn-title-begin">Begin</button>
+      <button id="btn-title-howto" class="secondary">How it works</button>
+    </div>
+  </section>
+
+  <section id="screen-howto" class="screen">
+    <h2>How it works</h2>
+    <ol>
+      <li>The ferry follows the same route every morning. You cannot steer it — it isn't listening.</li>
+      <li>Drag on the water to lean the wake left or right, within its limits.</li>
+      <li>Drag up to sharpen the wake — narrower, stronger. Drag down to widen it — softer, gentler.</li>
+      <li>The wake trails behind the ferry on a real delay. Aim for where things will be, not where they are.</li>
+      <li>Catch a drifting toy in the wake to carry it home. Rock a sleepy angler's boat — not too hard. Sweep litter toward the skimmer.</li>
+      <li>There's a swan nest somewhere in the harbor. Never let the wake grow strong near it — widen and lean away in time.</li>
+    </ol>
+    <button id="btn-howto-back" class="secondary">Back</button>
+  </section>
+
+  <section id="screen-select" class="screen">
+    <h2>Choose a morning</h2>
+    <div id="select-list"></div>
+    <button id="btn-select-back" class="ghost">Back</button>
+  </section>
+
+  <section id="screen-play" class="screen">
+    <div id="harbor-wrap">
+      <canvas id="harbor"></canvas>
+      <div id="play-hint">drag to steer · up to sharpen, down to widen</div>
+    </div>
+  </section>
+
+  <section id="screen-result" class="screen">
+    <h2 id="result-title">A good morning.</h2>
+    <p id="result-detail"></p>
+    <div id="result-share-box">
+      <div id="result-share-text"></div>
+    </div>
+    <div class="stack">
+      <button id="btn-result-continue">Continue</button>
+      <button id="btn-result-share" class="secondary">Share</button>
+    </div>
+  </section>
+
+</div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
